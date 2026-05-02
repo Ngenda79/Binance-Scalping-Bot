@@ -96,7 +96,34 @@ def status():
     return {"bot": bot_status}
 
 # === START THREAD ===
-threading.Thread(target=trading_loop).start()
+import threading
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+bot_thread = None
+
+def start_trading_thread():
+    global bot_thread
+    if bot_thread is None:
+        bot_thread = threading.Thread(target=trading_loop)
+        bot_thread.daemon = True
+        bot_thread.start()
+
+@app.route("/")
+def home():
+    return {"status": "Bot running"}
+
+@app.route("/start", methods=["POST"])
+def start():
+    global bot_status
+    bot_status = True
+    start_trading_thread()
+    return {"status": "Bot started"}
+
+@app.route("/stop", methods=["POST"])
+def stop():
+    global bot_status
+    bot_status = False
+    return {"status": "Bot stopped"}
+
+@app.route("/status")
+def status():
+    return {"bot": bot_status}
